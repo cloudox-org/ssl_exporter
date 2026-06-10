@@ -2,25 +2,29 @@
 %global user prometheus
 %global group prometheus
 
-Name: artifactory_exporter
-Version: 1.16.1
+Name:    ssl_exporter
+Version: 2.4.3
 Release: 1%{?dist}
-Summary: Prometheus exporter for JFrog Artifactory stats.
+Summary: Prometheus exporter for SSL certificates.
 License: ASL 2.0
-URL:     https://github.com/peimanja/artifactory_exporter
+URL:     https://github.com/ribbybibby/ssl_exporter
 
-Source0: https://github.com/peimanja/artifactory_exporter/releases/download/v%{version}/%{name}-v%{version}-linux-amd64.tar.gz
+Source0: https://github.com/ribbybibby/ssl_exporter/releases/download/v%{version}/%{name}_%{version}_linux_amd64.tar.gz
 Source1: %{name}.unit
 Source2: %{name}.default
+Source3: https://raw.githubusercontent.com/ribbybibby/%{name}/v%{version}/examples/%{name}.yaml
 
 %{?systemd_requires}
 Requires(pre): shadow-utils
 
 %description
-Collects metrics about an Artifactory system
+Prometehus exporter that exports metrics for certificates collected from TCP
+probes, local files or Kubernetes secrets. The metrics are labelled with fields
+from the certificate, which allows for informational dashboards and flexible
+alert routing.
 
 %prep
-%setup -q -D -c %{name}-v%{version}-linux-amd64
+%setup -q -D -c %{name}_%{version}_linux_amd64
 
 %build
 /bin/true
@@ -30,6 +34,8 @@ mkdir -vp %{buildroot}%{_sharedstatedir}/prometheus
 install -D -m 755 %{name} %{buildroot}%{_bindir}/%{name}
 install -D -m 644 %{SOURCE2} %{buildroot}%{_sysconfdir}/default/%{name}
 install -D -m 644 %{SOURCE1} %{buildroot}%{_unitdir}/%{name}.service
+install -D -m 644 %{SOURCE3} %{buildroot}%{_sysconfdir}/prometheus/%{name}.yml
+
 
 %pre
 getent group prometheus >/dev/null || groupadd -r prometheus
@@ -52,7 +58,8 @@ exit 0
 %config(noreplace) %{_sysconfdir}/default/%{name}
 %dir %attr(755, %{user}, %{group}) %{_sharedstatedir}/prometheus
 %{_unitdir}/%{name}.service
+%config(noreplace) %{_sysconfdir}/prometheus/%{name}.yml
 
 %changelog
-* Thu Apr 02 2026 Ivan Garcia <igarcia@cloudox.org> - 1.16.1
-- Initial packaging for the 1.16.1 branch
+* Wed Jun 10 2026 Ivan Garcia <igarcia@cloudox.org> - 2.4.3
+- Initial packaging for the 2.4.3 branch
